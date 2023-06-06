@@ -1,22 +1,5 @@
-// 定义状态机的状态
-export enum State {
-  initial = 1,
-  tagOpen,
-  tagName,
-  text,
-  tagEnd,
-  tagEndName,
-}
-
-export interface Token {
-  type: keyof typeof State
-  content?: string
-  name?: string
-}
-
-function isAlpha(char: string) {
-  return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
-}
+import type { Token } from './types'
+import { State } from './types'
 
 export function tokenize(str: string) {
   let currentState: State = State.initial
@@ -148,4 +131,8 @@ export function tokenize(str: string) {
   }
 
   return tokens
+}
+
+function isAlpha(char: string) {
+  return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
 }
