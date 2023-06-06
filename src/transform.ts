@@ -31,7 +31,6 @@ export function transform(ast: Node) {
   }
 
   traverseNode(ast, context)
-  console.log(dump(ast))
   return ast
 }
 
@@ -118,16 +117,4 @@ function removeNode(context: TransformContext) {
     context.parent.children.splice(context.childIndex, 1)
     context.currentNode = null
   }
-}
-
-function dump(node: Node, indent = 0) {
-  const type = node.type
-  const desc = node.type === 'Root'
-    ? ''
-    : node.type === 'Element'
-      ? node.tag
-      : node.content
-  console.log(`${'-'.repeat(indent)}${type}: ${desc}`)
-  if ('children' in node)
-    node.children.forEach(n => dump(n, indent + 2))
 }

@@ -1,5 +1,7 @@
 import type { RootNode } from '../src'
 
+export const template = '<div><p>Vue</p><p>Template</p></div>'
+
 export const root: RootNode = {
   children: [
     {
