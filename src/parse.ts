@@ -1,22 +1,26 @@
 /* eslint-disable no-case-declarations */
 import { tokenize } from './tokenize'
+import type { JSNode } from './transformJS'
 
 export type Node = RootNode | ElementNode | TextNode
 
 export interface RootNode {
   type: 'Root'
   children: Node[]
+  jsNode: JSNode | undefined
 }
 
 export interface ElementNode {
   type: 'Element'
   tag: string
   children: Node[]
+  jsNode: JSNode | undefined
 }
 
 export interface TextNode {
   type: 'Text'
   content: string
+  jsNode: JSNode | undefined
 }
 
 export function parse(str: string) {
@@ -24,6 +28,7 @@ export function parse(str: string) {
   const root: RootNode = {
     type: 'Root',
     children: [],
+    jsNode: undefined,
   }
 
   // DFS
@@ -38,6 +43,7 @@ export function parse(str: string) {
           type: 'Element',
           tag: t.name!,
           children: [],
+          jsNode: undefined,
         }
         parent.children.push(elementNode)
         elementStack.push(elementNode)
@@ -46,6 +52,7 @@ export function parse(str: string) {
         const textNode: TextNode = {
           type: 'Text',
           content: t.content!,
+          jsNode: undefined,
         }
         parent.children.push(textNode)
         break

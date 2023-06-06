@@ -1,4 +1,5 @@
 import type { Node } from './parse'
+import { createArrayExpression, createCallExpression, createStringLiteral } from './transformJS'
 
 export interface TransformContext {
   currentNode: Node | null
@@ -7,8 +8,9 @@ export interface TransformContext {
   replaceNode(node: Node, context: TransformContext): void
   removeNode(context: TransformContext): void
   nodeTransforms: [
+    transformRoot: (node: Node) => OnExitFunction,
     transformElement: (node: Node) => OnExitFunction,
-    transformText: (node: Node) => OnExitFunction,
+    transformText: (node: Node) => void,
   ]
 }
 
@@ -22,6 +24,7 @@ export function transform(ast: Node) {
     replaceNode,
     removeNode,
     nodeTransforms: [
+      transformRoot,
       transformElement,
       transformText,
     ],
@@ -32,18 +35,49 @@ export function transform(ast: Node) {
   return ast
 }
 
+function transformRoot(node: Node) {
+  return () => {
+    if (node.type !== 'Root')
+      return
+
+    const vnodeJSAST = node.children[0].jsNode
+    node.jsNode = {
+      type: 'FunctionDecl',
+      id: {
+        type: 'Identifier',
+        name: 'render',
+      },
+      params: [],
+      body: [
+        {
+          type: 'ReturnStatement',
+          return: vnodeJSAST!,
+        },
+      ],
+    }
+  }
+}
+
 function transformElement(node: Node) {
   return () => {
-    if (node.type === 'Element' && node.tag === 'p')
-      node.tag = 'h1'
+    if (node.type !== 'Element')
+      return
+
+    const callExpression = createCallExpression('h', [createStringLiteral(node.tag)])
+    node.children.length === 1
+      ? callExpression.arguments.push(node.children[0].jsNode!)
+      : callExpression.arguments.push(
+        createArrayExpression(node.children.map(c => c.jsNode!)),
+      )
+
+    node.jsNode = callExpression
   }
 }
 
 function transformText(node: Node) {
-  return () => {
-    if (node.type === 'Text')
-      node.content = node.content.repeat(2)
-  }
+  if (node.type !== 'Text')
+    return
+  node.jsNode = createStringLiteral(node.content)
 }
 
 function traverseNode(ast: Node, context: TransformContext) {

@@ -1,3 +1,6 @@
 export * from './tokenize'
 export * from './parse'
 export * from './transform'
+export * from './transformJS'
+export * from './generate'
+export * from './types'

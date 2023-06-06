@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parse } from '../src'
 
-describe('tokenize', () => {
+describe('parse', () => {
   it('basic', () => {
     const template = '<div><p>Vue</p><p>Template</p></div>'
     expect(parse(template)).toMatchInlineSnapshot(`
