@@ -1,7 +1,3 @@
 # Vue mini compiler
 
-## Publish
-
-```bash
-pnpm release
-```
+Try to retro vue compiler step by step

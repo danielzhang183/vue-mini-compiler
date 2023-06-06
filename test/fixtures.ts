@@ -10,9 +10,11 @@ export const root: RootNode = {
           children: [
             {
               content: 'Vue',
+              jsNode: undefined,
               type: 'Text',
             },
           ],
+          jsNode: undefined,
           tag: 'p',
           type: 'Element',
         },
@@ -20,16 +22,20 @@ export const root: RootNode = {
           children: [
             {
               content: 'Template',
+              jsNode: undefined,
               type: 'Text',
             },
           ],
+          jsNode: undefined,
           tag: 'p',
           type: 'Element',
         },
       ],
+      jsNode: undefined,
       tag: 'div',
       type: 'Element',
     },
   ],
+  jsNode: undefined,
   type: 'Root',
 }

@@ -1,14 +1,14 @@
 {
-  "name": "pkg-name",
+  "name": "vue-mini-compiler",
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@8.6.1",
   "description": "Node starter template with using ts",
   "author": "Daniel Zhang",
   "license": "MIT",
-  "homepage": "https://github.com/danielzhang183/pkg-name#readme",
-  "repository": "danielzhang183/pkg-name",
-  "bugs": "https://github.com/danielzhang183/pkg-name/issues",
+  "homepage": "https://github.com/danielzhang183/vue-mini-compiler#readme",
+  "repository": "danielzhang183/vue-mini-compiler",
+  "bugs": "https://github.com/danielzhang183/vue-mini-compiler/issues",
   "keywords": [],
   "sideEffects": false,
   "exports": {
