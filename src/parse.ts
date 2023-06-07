@@ -1,35 +1,11 @@
 /* eslint-disable no-case-declarations */
 import { tokenize } from './tokenize'
-import type { JSNode } from './ast'
-
-export type Node = RootNode | ElementNode | TextNode
-
-export interface RootNode {
-  type: 'Root'
-  children: Node[]
-  jsNode: JSNode | undefined
-}
-
-export interface ElementNode {
-  type: 'Element'
-  tag: string
-  children: Node[]
-  jsNode: JSNode | undefined
-}
-
-export interface TextNode {
-  type: 'Text'
-  content: string
-  jsNode: JSNode | undefined
-}
+import type { ElementNode, Node, RootNode, TextNode } from './ast'
+import { NodeTypes, createRoot } from './ast'
 
 export function parse(str: string) {
   const tokens = tokenize(str)
-  const root: RootNode = {
-    type: 'Root',
-    children: [],
-    jsNode: undefined,
-  }
+  const root = createRoot()
 
   // DFS
   const elementStack: Node[] = [root]
@@ -40,7 +16,7 @@ export function parse(str: string) {
     switch (t.type) {
       case 'tagName':
         const elementNode: ElementNode = {
-          type: 'Element',
+          type: NodeTypes.ElEMENT,
           tag: t.name!,
           children: [],
           jsNode: undefined,
@@ -50,7 +26,7 @@ export function parse(str: string) {
         break
       case 'text':
         const textNode: TextNode = {
-          type: 'Text',
+          type: NodeTypes.TEXT,
           content: t.content!,
           jsNode: undefined,
         }

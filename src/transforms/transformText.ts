@@ -1,9 +1,9 @@
-import { createStringLiteral } from '../ast'
-import type { Node } from '../parse'
+import { NodeTypes, createObjectProperty } from '../ast'
 import type { NodeTransform } from '../transform'
 
-export const transformText: NodeTransform = (node: Node) => {
-  if (node.type !== 'Text')
+export const transformText: NodeTransform = (node) => {
+  if (node.type !== NodeTypes.TEXT)
     return
-  node.jsNode = createStringLiteral(node.content)
+
+  node.jsNode = createObjectProperty(node.content)
 }

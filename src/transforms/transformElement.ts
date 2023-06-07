@@ -1,13 +1,12 @@
-import { createArrayExpression, createCallExpression, createStringLiteral } from '../ast'
-import type { Node } from '../parse'
+import { NodeTypes, createArrayExpression, createCallExpression, createObjectProperty } from '../ast'
 import type { NodeTransform } from '../transform'
 
-export const transformElement: NodeTransform = (node: Node) => {
+export const transformElement: NodeTransform = (node) => {
   return () => {
-    if (node.type !== 'Element')
+    if (node.type !== NodeTypes.ElEMENT)
       return
 
-    const callExpression = createCallExpression('h', [createStringLiteral(node.tag)])
+    const callExpression = createCallExpression('h', [createObjectProperty(node.tag)])
     node.children.length === 1
       ? callExpression.arguments.push(node.children[0].jsNode!)
       : callExpression.arguments.push(

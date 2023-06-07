@@ -1,14 +1,15 @@
-import type { Node } from './parse'
+import type { ParentNode, RootNode, TemplateChildNode } from './ast'
+import { NodeTypes } from './ast'
 import { transformElement } from './transforms/transformElement'
 import { transformRoot } from './transforms/transformRoot'
 import { transformText } from './transforms/transformText'
 
 export interface TransformContext {
-  currentNode: Node | null
+  currentNode: RootNode | TemplateChildNode | null
   childIndex: number
-  parent: Node | null
-  replaceNode(node: Node, context: TransformContext): void
-  removeNode(context: TransformContext): void
+  parent: ParentNode | null
+  replaceNode(node: TemplateChildNode): void
+  removeNode(): void
   nodeTransforms: [
     transformRoot: NodeTransform,
     transformElement: NodeTransform,
@@ -17,17 +18,26 @@ export interface TransformContext {
 }
 
 export type NodeTransform = (
-  node: Node,
+  node: RootNode | TemplateChildNode,
   // context: TransformContext
 ) => void | (() => void)
 
-export function transform(ast: Node) {
+export function createTransformContext(): TransformContext {
   const context: TransformContext = {
     currentNode: null,
     childIndex: 0,
     parent: null,
-    replaceNode,
-    removeNode,
+    replaceNode(node: TemplateChildNode) {
+      context.currentNode = node
+      if (context.parent && 'children' in context.parent)
+        context.parent.children[context.childIndex] = node
+    },
+    removeNode() {
+      if (context.parent && 'children' in context.parent) {
+        context.parent.children.splice(context.childIndex, 1)
+        context.currentNode = null
+      }
+    },
     nodeTransforms: [
       transformRoot,
       transformElement,
@@ -35,47 +45,49 @@ export function transform(ast: Node) {
     ],
   }
 
-  traverseNode(ast, context)
-  return ast
+  return context
 }
 
-function traverseNode(ast: Node, context: TransformContext) {
-  context.currentNode = ast
-  const exitFns: (() => void)[] = []
-  const transforms = context.nodeTransforms
+export function transform(root: RootNode) {
+  const context = createTransformContext()
+  traverseNode(root, context)
+  return root
+}
 
-  for (let i = 0; i < transforms.length; i++) {
-    const onExit = transforms[i](context.currentNode)
+function traverseNode(node: RootNode | TemplateChildNode, context: TransformContext) {
+  context.currentNode = node
+  const exitFns: (() => void)[] = []
+  const { nodeTransforms } = context
+
+  for (let i = 0; i < nodeTransforms.length; i++) {
+    const onExit = nodeTransforms[i](node)
     if (onExit)
       exitFns.push(onExit)
+
     if (!context.currentNode)
       return
+    else
+      node = context.currentNode
   }
 
-  if ('children' in context.currentNode) {
-    const { children } = context.currentNode
-    for (let i = 0; i < children.length; i++) {
-      context.parent = context.currentNode
-      context.childIndex = i
-      traverseNode(children[i], context)
-    }
+  switch (node.type) {
+    case NodeTypes.ROOT:
+    case NodeTypes.ElEMENT:
+      traverseChildren(node, context)
   }
 
   // exit transforms
+  context.currentNode = node
   let i = exitFns.length
   while (i--)
     exitFns[i]()
 }
 
-function replaceNode(node: Node, context: TransformContext) {
-  context.currentNode = node
-  if (context.parent && 'children' in context.parent)
-    context.parent.children[context.childIndex] = node
-}
-
-function removeNode(context: TransformContext) {
-  if (context.parent && 'children' in context.parent) {
-    context.parent.children.splice(context.childIndex, 1)
-    context.currentNode = null
+function traverseChildren(parent: ParentNode, context: TransformContext) {
+  for (let i = 0; i < parent.children.length; i++) {
+    const child = parent.children[i]
+    context.parent = parent
+    context.childIndex = i
+    traverseNode(child, context)
   }
 }

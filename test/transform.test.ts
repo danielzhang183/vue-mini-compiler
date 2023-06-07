@@ -14,68 +14,62 @@ describe('transform', () => {
                   {
                     "content": "Vue",
                     "jsNode": {
-                      "type": "StringLiteral",
+                      "type": 7,
                       "value": "Vue",
                     },
-                    "type": "Text",
+                    "type": 2,
                   },
                 ],
                 "jsNode": {
                   "arguments": [
                     {
-                      "type": "StringLiteral",
+                      "type": 7,
                       "value": "p",
                     },
                     {
-                      "type": "StringLiteral",
+                      "type": 7,
                       "value": "Vue",
                     },
                   ],
-                  "callee": {
-                    "name": "h",
-                    "type": "Identifier",
-                  },
-                  "type": "CallExpression",
+                  "callee": "h",
+                  "type": 6,
                 },
                 "tag": "p",
-                "type": "Element",
+                "type": 1,
               },
               {
                 "children": [
                   {
                     "content": "Template",
                     "jsNode": {
-                      "type": "StringLiteral",
+                      "type": 7,
                       "value": "Template",
                     },
-                    "type": "Text",
+                    "type": 2,
                   },
                 ],
                 "jsNode": {
                   "arguments": [
                     {
-                      "type": "StringLiteral",
+                      "type": 7,
                       "value": "p",
                     },
                     {
-                      "type": "StringLiteral",
+                      "type": 7,
                       "value": "Template",
                     },
                   ],
-                  "callee": {
-                    "name": "h",
-                    "type": "Identifier",
-                  },
-                  "type": "CallExpression",
+                  "callee": "h",
+                  "type": 6,
                 },
                 "tag": "p",
-                "type": "Element",
+                "type": 1,
               },
             ],
             "jsNode": {
               "arguments": [
                 {
-                  "type": "StringLiteral",
+                  "type": 7,
                   "value": "div",
                 },
                 {
@@ -83,58 +77,49 @@ describe('transform', () => {
                     {
                       "arguments": [
                         {
-                          "type": "StringLiteral",
+                          "type": 7,
                           "value": "p",
                         },
                         {
-                          "type": "StringLiteral",
+                          "type": 7,
                           "value": "Vue",
                         },
                       ],
-                      "callee": {
-                        "name": "h",
-                        "type": "Identifier",
-                      },
-                      "type": "CallExpression",
+                      "callee": "h",
+                      "type": 6,
                     },
                     {
                       "arguments": [
                         {
-                          "type": "StringLiteral",
+                          "type": 7,
                           "value": "p",
                         },
                         {
-                          "type": "StringLiteral",
+                          "type": 7,
                           "value": "Template",
                         },
                       ],
-                      "callee": {
-                        "name": "h",
-                        "type": "Identifier",
-                      },
-                      "type": "CallExpression",
+                      "callee": "h",
+                      "type": 6,
                     },
                   ],
-                  "type": "ArrayExpression",
+                  "type": 8,
                 },
               ],
-              "callee": {
-                "name": "h",
-                "type": "Identifier",
-              },
-              "type": "CallExpression",
+              "callee": "h",
+              "type": 6,
             },
             "tag": "div",
-            "type": "Element",
+            "type": 1,
           },
         ],
         "jsNode": {
           "body": [
             {
-              "return": {
+              "returns": {
                 "arguments": [
                   {
-                    "type": "StringLiteral",
+                    "type": 7,
                     "value": "div",
                   },
                   {
@@ -142,58 +127,50 @@ describe('transform', () => {
                       {
                         "arguments": [
                           {
-                            "type": "StringLiteral",
+                            "type": 7,
                             "value": "p",
                           },
                           {
-                            "type": "StringLiteral",
+                            "type": 7,
                             "value": "Vue",
                           },
                         ],
-                        "callee": {
-                          "name": "h",
-                          "type": "Identifier",
-                        },
-                        "type": "CallExpression",
+                        "callee": "h",
+                        "type": 6,
                       },
                       {
                         "arguments": [
                           {
-                            "type": "StringLiteral",
+                            "type": 7,
                             "value": "p",
                           },
                           {
-                            "type": "StringLiteral",
+                            "type": 7,
                             "value": "Template",
                           },
                         ],
-                        "callee": {
-                          "name": "h",
-                          "type": "Identifier",
-                        },
-                        "type": "CallExpression",
+                        "callee": "h",
+                        "type": 6,
                       },
                     ],
-                    "type": "ArrayExpression",
+                    "type": 8,
                   },
                 ],
-                "callee": {
-                  "name": "h",
-                  "type": "Identifier",
-                },
-                "type": "CallExpression",
+                "callee": "h",
+                "type": 6,
               },
-              "type": "ReturnStatement",
+              "type": 10,
             },
           ],
           "id": {
             "name": "render",
-            "type": "Identifier",
+            "type": 3,
           },
           "params": [],
-          "type": "FunctionDecl",
+          "returns": undefined,
+          "type": 9,
         },
-        "type": "Root",
+        "type": 0,
       }
     `)
   })
