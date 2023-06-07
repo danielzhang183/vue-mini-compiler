@@ -1,5 +1,7 @@
 import type { Node } from './parse'
-import { createArrayExpression, createCallExpression, createStringLiteral } from './transformJS'
+import { transformElement } from './transforms/transformElement'
+import { transformRoot } from './transforms/transformRoot'
+import { transformText } from './transforms/transformText'
 
 export interface TransformContext {
   currentNode: Node | null
@@ -8,13 +10,16 @@ export interface TransformContext {
   replaceNode(node: Node, context: TransformContext): void
   removeNode(context: TransformContext): void
   nodeTransforms: [
-    transformRoot: (node: Node) => OnExitFunction,
-    transformElement: (node: Node) => OnExitFunction,
-    transformText: (node: Node) => void,
+    transformRoot: NodeTransform,
+    transformElement: NodeTransform,
+    transformText: NodeTransform,
   ]
 }
 
-export type OnExitFunction = () => void
+export type NodeTransform = (
+  node: Node,
+  // context: TransformContext
+) => void | (() => void)
 
 export function transform(ast: Node) {
   const context: TransformContext = {
@@ -34,54 +39,9 @@ export function transform(ast: Node) {
   return ast
 }
 
-function transformRoot(node: Node) {
-  return () => {
-    if (node.type !== 'Root')
-      return
-
-    const vnodeJSAST = node.children[0].jsNode
-    node.jsNode = {
-      type: 'FunctionDecl',
-      id: {
-        type: 'Identifier',
-        name: 'render',
-      },
-      params: [],
-      body: [
-        {
-          type: 'ReturnStatement',
-          return: vnodeJSAST!,
-        },
-      ],
-    }
-  }
-}
-
-function transformElement(node: Node) {
-  return () => {
-    if (node.type !== 'Element')
-      return
-
-    const callExpression = createCallExpression('h', [createStringLiteral(node.tag)])
-    node.children.length === 1
-      ? callExpression.arguments.push(node.children[0].jsNode!)
-      : callExpression.arguments.push(
-        createArrayExpression(node.children.map(c => c.jsNode!)),
-      )
-
-    node.jsNode = callExpression
-  }
-}
-
-function transformText(node: Node) {
-  if (node.type !== 'Text')
-    return
-  node.jsNode = createStringLiteral(node.content)
-}
-
 function traverseNode(ast: Node, context: TransformContext) {
   context.currentNode = ast
-  const exitFns: OnExitFunction[] = []
+  const exitFns: (() => void)[] = []
   const transforms = context.nodeTransforms
 
   for (let i = 0; i < transforms.length; i++) {
@@ -101,6 +61,7 @@ function traverseNode(ast: Node, context: TransformContext) {
     }
   }
 
+  // exit transforms
   let i = exitFns.length
   while (i--)
     exitFns[i]()

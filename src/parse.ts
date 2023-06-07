@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import { tokenize } from './tokenize'
-import type { JSNode } from './transformJS'
+import type { JSNode } from './ast'
 
 export type Node = RootNode | ElementNode | TextNode
 

@@ -1,4 +1,4 @@
-import type { ArrayExpression, CallExpression, FunctionDecl, JSNode, ReturnStatement, StringLiteral } from './transformJS'
+import type { ArrayExpression, CallExpression, FunctionDecl, JSNode, ReturnStatement, StringLiteral } from './ast'
 
 export interface GenerateContext {
   code: string
