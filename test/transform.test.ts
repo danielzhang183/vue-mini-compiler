@@ -114,60 +114,57 @@ describe('transform', () => {
           },
         ],
         "jsNode": {
-          "body": [
-            {
-              "returns": {
-                "arguments": [
-                  {
-                    "type": 7,
-                    "value": "div",
-                  },
-                  {
-                    "elements": [
-                      {
-                        "arguments": [
-                          {
-                            "type": 7,
-                            "value": "p",
-                          },
-                          {
-                            "type": 7,
-                            "value": "Vue",
-                          },
-                        ],
-                        "callee": "h",
-                        "type": 6,
-                      },
-                      {
-                        "arguments": [
-                          {
-                            "type": 7,
-                            "value": "p",
-                          },
-                          {
-                            "type": 7,
-                            "value": "Template",
-                          },
-                        ],
-                        "callee": "h",
-                        "type": 6,
-                      },
-                    ],
-                    "type": 8,
-                  },
-                ],
-                "callee": "h",
-                "type": 6,
-              },
-              "type": 10,
-            },
-          ],
           "id": {
             "name": "render",
             "type": 3,
           },
           "params": [],
-          "returns": undefined,
+          "returns": {
+            "returns": {
+              "arguments": [
+                {
+                  "type": 7,
+                  "value": "div",
+                },
+                {
+                  "elements": [
+                    {
+                      "arguments": [
+                        {
+                          "type": 7,
+                          "value": "p",
+                        },
+                        {
+                          "type": 7,
+                          "value": "Vue",
+                        },
+                      ],
+                      "callee": "h",
+                      "type": 6,
+                    },
+                    {
+                      "arguments": [
+                        {
+                          "type": 7,
+                          "value": "p",
+                        },
+                        {
+                          "type": 7,
+                          "value": "Template",
+                        },
+                      ],
+                      "callee": "h",
+                      "type": 6,
+                    },
+                  ],
+                  "type": 8,
+                },
+              ],
+              "callee": "h",
+              "type": 6,
+            },
+            "type": 10,
+          },
           "type": 9,
         },
         "type": 0,

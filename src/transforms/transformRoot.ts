@@ -6,11 +6,9 @@ export const transformRoot: NodeTransform = (node) => {
     if (node.type !== NodeTypes.ROOT)
       return
 
-    const vnodeJSAST = node.children[0].jsNode
     node.jsNode = createFunctionExpression(
       [],
-      undefined,
-      [createReturnStatement(vnodeJSAST!)],
+      createReturnStatement(node.children[0].jsNode!),
       'render',
     )
   }

@@ -65,7 +65,10 @@ function genFunctionExpression(node: FunctionExpression, context: GenerateContex
   push('{')
   indent()
   // 为函数体生成代码，这里递归地调用了 genNode 函数
-  node.body!.forEach(n => genNode(n, context))
+  node.body?.forEach(n => genNode(n, context))
+  if (node.returns)
+    genNode(node.returns as JSChildNode, context)
+
   deIndent()
   push('}')
 }
@@ -74,8 +77,10 @@ function genReturnStatement(
   node: ReturnStatement,
   context: GenerateContext,
 ) {
+  console.log(111)
   const { push } = context
   push('return ')
+  console.log({ returns: node.returns })
   // 调用 genNode 函数递归地生成返回值代码
   genNode(node.returns as JSChildNode, context)
 }

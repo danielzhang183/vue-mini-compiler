@@ -133,7 +133,6 @@ export function createArrayExpression(elements: JSChildNode[]): ArrayExpression 
 export function createFunctionExpression(
   params: FunctionExpression['params'],
   returns: FunctionExpression['returns'] = undefined,
-  body: FunctionExpression['body'] = undefined,
   name: string,
 ): FunctionExpression {
   return {
@@ -141,7 +140,6 @@ export function createFunctionExpression(
     id: createIdentifier(name),
     params,
     returns,
-    body,
   }
 }
 

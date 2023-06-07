@@ -6,7 +6,7 @@ export const transformElement: NodeTransform = (node) => {
     if (node.type !== NodeTypes.ElEMENT)
       return
 
-    const callExpression = createCallExpression('h', [createObjectProperty(node.tag)])
+    const callExpression = createCallExpression<string>('h', [createObjectProperty(node.tag)])
     node.children.length === 1
       ? callExpression.arguments.push(node.children[0].jsNode!)
       : callExpression.arguments.push(
