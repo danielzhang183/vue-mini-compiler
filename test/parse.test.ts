@@ -120,4 +120,87 @@ describe('parse', () => {
       }
     `)
   })
+
+  it('support self-closing tag', () => {
+    const template = '<img />'
+    expect(parse(template)).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "isSelfClosing": true,
+            "jsNode": undefined,
+            "props": [],
+            "tag": "img",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+    const template2 = '<div><img /></div>'
+    expect(parse(template2)).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [],
+                "isSelfClosing": true,
+                "jsNode": undefined,
+                "props": [],
+                "tag": "img",
+                "type": 1,
+              },
+            ],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [],
+            "tag": "div",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+
+  it('support parse attribute', () => {
+    const template1 = '<div id="foo"></div>'
+    const template2 = '<div id=\'foo\'></div>'
+    const template3 = '<div id=foo></div>'
+    const template4 = '<div id= foo ></div>'
+    const result = parse(template1)
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [
+              {
+                "name": "id",
+                "type": 7,
+                "value": {
+                  "content": "foo",
+                  "jsNode": undefined,
+                  "type": 2,
+                },
+              },
+            ],
+            "tag": "div",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+    expect(parse(template2)).toEqual(result)
+    expect(parse(template3)).toEqual(result)
+    expect(parse(template4)).toEqual(result)
+  })
 })

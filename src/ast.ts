@@ -4,8 +4,11 @@ export enum NodeTypes {
   TEXT,
   IDENTIFIER,
   COMMENT,
-  INTERPOLATION,
   SIMPLE_EXPRESSION,
+  INTERPOLATION,
+  ATTRIBUTE,
+  DIRECTIVE,
+  // containers
   COMPOUND_EXPRESSION,
   // codegen
   JS_CALL_EXPRESSION,
@@ -49,8 +52,7 @@ export interface BaseElementNode extends Node {
   tag: string
   isSelfClosing: boolean
   children: TemplateChildNode[]
-  // TODO: fix
-  props: any[]
+  props: Array<AttributeNode | DirectiveNode>
   jsNode: JSChildNode | undefined
 }
 
@@ -63,6 +65,20 @@ export interface TextNode extends Node {
 export interface CommentNode extends Node {
   type: NodeTypes.COMMENT
   content: string
+}
+
+export interface AttributeNode extends Node {
+  type: NodeTypes.ATTRIBUTE
+  name: string
+  value: TextNode | undefined
+}
+
+export interface DirectiveNode extends Node {
+  type: NodeTypes.DIRECTIVE
+  name: string
+  exp: ExpressionNode | undefined
+  arg: ExpressionNode | undefined
+  modifiers: string[]
 }
 
 export type ExpressionNode = SimpleExpressionNode | CompoundExpressionNode

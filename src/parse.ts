@@ -1,4 +1,4 @@
-import type { CommentNode, ElementNode, InterpolationNode, TemplateChildNode, TextNode } from './ast'
+import type { AttributeNode, CommentNode, DirectiveNode, ElementNode, InterpolationNode, TemplateChildNode, TextNode } from './ast'
 import { NodeTypes, createRoot } from './ast'
 
 export enum TextModes {
@@ -6,16 +6,13 @@ export enum TextModes {
   RCDATA = 'RCDATA',
   RAWTEXT = 'RAWTEXT',
   CDATA = 'CDATA',
+  ATTRIBUTE_VALUE = 'ATTRIBUTE_VALUE',
 }
 
 enum TagType {
   START,
   END,
 }
-
-export const spaceRE = /^[\t\r\n\f ]+/
-export const tagRE = /^<\/?([a-z][^\t\r\n\f />]*)/i
-export const RAWTEXT_RE = /style|xmp|iframe|noembed|noframes|noscript/
 
 export interface ParserOptions {
   getTextMode?: (
@@ -37,7 +34,7 @@ export const defaultParserOptions = {
   getTextMode: ({ tag }: ElementNode) => {
     if (tag === 'textarea' || tag === 'title')
       return TextModes.RCDATA
-    else if (RAWTEXT_RE.test(tag))
+    else if (/style|xmp|iframe|noembed|noframes|noscript/.test(tag))
       return TextModes.RAWTEXT
 
     return TextModes.DATA
@@ -61,7 +58,7 @@ export function createParserContext(
       console.log({ source: context.source })
     },
     advanceSpace() {
-      const match = spaceRE.exec(context.source)
+      const match = /^[\t\r\n\f ]+/.exec(context.source)
       if (match)
         context.advanceBy(match[0].length)
     },
@@ -177,6 +174,8 @@ function parseTag(
 
   advanceBy(match[0].length)
   advanceSpace()
+  const props = parseAttributes(context)
+
   const isSelfClosing = context.source.startsWith('/>')
   advanceBy(isSelfClosing ? 2 : 1)
 
@@ -186,26 +185,11 @@ function parseTag(
   return {
     type: NodeTypes.ElEMENT,
     tag,
-    props: [],
+    props,
     children: [],
     isSelfClosing,
     jsNode: undefined,
   }
-}
-
-function parseCDATA(
-  context: ParserContext,
-  ancestors: ElementNode[],
-): TemplateChildNode {
-
-}
-
-function parseComment(context: ParserContext): CommentNode {
-
-}
-
-function parseInterpolation(context: ParserContext): InterpolationNode {
-
 }
 
 function parseText(context: ParserContext, mode: TextModes): TextNode {
@@ -246,6 +230,110 @@ function parseTextData(
   else {
     // TODO
     return ''
+  }
+}
+
+function parseCDATA(
+  context: ParserContext,
+  ancestors: ElementNode[],
+): TemplateChildNode {
+
+}
+
+function parseComment(context: ParserContext): CommentNode {
+
+}
+
+function parseInterpolation(context: ParserContext): InterpolationNode {
+
+}
+
+type AttributeValue =
+  | {
+    content: string
+    isQuoted: boolean
+  }
+  | undefined
+
+function parseAttributes(context: ParserContext): Array<AttributeNode | DirectiveNode> {
+  const props: AttributeNode[] = []
+
+  while (
+    !context.source.startsWith('>')
+    && !context.source.startsWith('/>')
+  ) {
+    const attr = parseAttribute(context)
+    props.push(attr)
+  }
+
+  return props
+}
+
+function parseAttribute(context: ParserContext): AttributeNode {
+  const { advanceBy, advanceSpace } = context
+
+  // <div id='foo'>
+  // <div id="foo">
+  // <div id=foo>
+  // <div id= foo >
+  // Name
+  const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)!
+  const name = match[0]
+  advanceBy(name.length)
+
+  // Value
+  let value: AttributeValue | undefined
+  if (/^[\t\r\n\f ]*=/.test(context.source)) {
+    advanceSpace()
+    // consume '='
+    advanceBy(1)
+    advanceSpace()
+    value = parseAttributeValue(context)
+  }
+
+  advanceSpace()
+  return {
+    type: NodeTypes.ATTRIBUTE,
+    name,
+    value: value && ({
+      type: NodeTypes.TEXT,
+      content: value.content,
+      jsNode: undefined,
+    }) as TextNode,
+  }
+}
+
+function parseAttributeValue(context: ParserContext): AttributeValue {
+  let content: string | undefined
+  const { advanceBy } = context
+
+  const quote = context.source[0]
+  const isQuoted = ['"', '\''].includes(quote)
+  if (isQuoted) {
+    // Quote Value
+    // consume quote
+    advanceBy(1)
+    const endIndex = context.source.indexOf(quote)
+    if (endIndex > -1) {
+      content = parseTextData(context, endIndex, TextModes.ATTRIBUTE_VALUE)
+      // consume quote another pair
+      advanceBy(1)
+    }
+    else {
+      content = parseTextData(context, endIndex, TextModes.ATTRIBUTE_VALUE)
+    }
+  }
+  else {
+    // Unquoted Value
+    const match = /^[^\t\r\n\f >]+/.exec(context.source)
+    if (!match)
+      return undefined
+    content = parseTextData(context, match[0].length, TextModes.ATTRIBUTE_VALUE)
+  }
+
+  return {
+    content,
+    isQuoted,
   }
 }
 
