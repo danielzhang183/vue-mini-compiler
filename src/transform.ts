@@ -29,11 +29,11 @@ export function createTransformContext(): TransformContext {
     parent: null,
     replaceNode(node: TemplateChildNode) {
       context.currentNode = node
-      if (context.parent && 'children' in context.parent)
+      if (context.parent)
         context.parent.children[context.childIndex] = node
     },
     removeNode() {
-      if (context.parent && 'children' in context.parent) {
+      if (context.parent) {
         context.parent.children.splice(context.childIndex, 1)
         context.currentNode = null
       }

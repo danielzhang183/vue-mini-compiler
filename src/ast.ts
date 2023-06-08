@@ -3,6 +3,8 @@ export enum NodeTypes {
   ElEMENT,
   TEXT,
   IDENTIFIER,
+  COMMENT,
+  INTERPOLATION,
   SIMPLE_EXPRESSION,
   COMPOUND_EXPRESSION,
   // codegen
@@ -13,6 +15,13 @@ export enum NodeTypes {
   JS_RETURN_STATEMENT,
 }
 
+export const enum ElementTypes {
+  ELEMENT,
+  COMPONENT,
+  SLOT,
+  TEMPLATE,
+}
+
 export interface Node {
   type: NodeTypes
 }
@@ -21,7 +30,10 @@ export type ParentNode = RootNode | ElementNode
 
 export type TemplateChildNode =
   | ElementNode
+  | InterpolationNode
+  | CompoundExpressionNode
   | TextNode
+  | CommentNode
 
 export interface RootNode extends Node {
   type: NodeTypes.ROOT
@@ -29,10 +41,16 @@ export interface RootNode extends Node {
   jsNode: JSChildNode | undefined
 }
 
-export interface ElementNode extends Node {
+export type ElementNode =
+ | BaseElementNode
+
+export interface BaseElementNode extends Node {
   type: NodeTypes.ElEMENT
   tag: string
+  isSelfClosing: boolean
   children: TemplateChildNode[]
+  // TODO: fix
+  props: any[]
   jsNode: JSChildNode | undefined
 }
 
@@ -42,11 +60,21 @@ export interface TextNode extends Node {
   jsNode: JSChildNode | undefined
 }
 
+export interface CommentNode extends Node {
+  type: NodeTypes.COMMENT
+  content: string
+}
+
 export type ExpressionNode = SimpleExpressionNode | CompoundExpressionNode
 
 export interface SimpleExpressionNode extends Node {
   type: NodeTypes.SIMPLE_EXPRESSION
   content: string
+}
+
+export interface InterpolationNode extends Node {
+  type: NodeTypes.INTERPOLATION
+  content: ExpressionNode
 }
 
 export interface CompoundExpressionNode extends Node {
@@ -163,10 +191,10 @@ export function createReturnStatement(
   }
 }
 
-export function createRoot(): RootNode {
+export function createRoot(children: TemplateChildNode[]): RootNode {
   return {
     type: NodeTypes.ROOT,
-    children: [],
+    children,
     jsNode: undefined,
   }
 }
