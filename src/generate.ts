@@ -77,10 +77,8 @@ function genReturnStatement(
   node: ReturnStatement,
   context: GenerateContext,
 ) {
-  console.log(111)
   const { push } = context
   push('return ')
-  console.log({ returns: node.returns })
   // 调用 genNode 函数递归地生成返回值代码
   genNode(node.returns as JSChildNode, context)
 }

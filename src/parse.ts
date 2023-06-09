@@ -1,5 +1,7 @@
 import type { AttributeNode, CommentNode, DirectiveNode, ElementNode, InterpolationNode, TemplateChildNode, TextNode } from './ast'
 import { NodeTypes, createRoot } from './ast'
+import { ErrorCodes, createCompilerError, defaultOnError, defaultOnWarn } from './errors'
+import type { MergedParserOptions, ParserOptions } from './options'
 
 export enum TextModes {
   DATA = 'DATA',
@@ -13,15 +15,6 @@ enum TagType {
   START,
   END,
 }
-
-export interface ParserOptions {
-  getTextMode?: (
-    node: ElementNode,
-    parent: ElementNode | undefined
-  ) => TextModes
-}
-
-export type MergedParserOptions = Required<ParserOptions>
 
 export interface ParserContext {
   options: MergedParserOptions
@@ -39,6 +32,8 @@ export const defaultParserOptions = {
 
     return TextModes.DATA
   },
+  onWarn: defaultOnWarn,
+  onError: defaultOnError,
 }
 
 export function createParserContext(
@@ -96,8 +91,22 @@ export function parseChildren(
             node = parseCDATA(context, ancestors)
         }
         else if (s[1] === '/') {
-          console.error('Invalid Eng Tag')
-          continue
+          if (s.length === 2) {
+            emitError(context, ErrorCodes.EOF_BEFORE_TAG_NAME)
+          }
+          else if (s[2] === '>') {
+            emitError(context, ErrorCodes.MISSING_END_TAG_NAME)
+            continue
+          }
+          else if (/[a-z]/i.test(s[2])) {
+            emitError(context, ErrorCodes.X_INVALID_END_TAG)
+            parseTag(context, TagType.END)
+            continue
+          }
+          else {
+            emitError(context, ErrorCodes.INVALID_FIRST_CHARACTER_OF_TAG_NAME)
+            continue
+          }
         }
         else if (/[a-z]/i.test(s[1])) {
           node = parseElement(context, ancestors)
@@ -118,6 +127,13 @@ export function parseChildren(
   }
 
   return nodes
+}
+
+function emitError(
+  context: ParserContext,
+  code: ErrorCodes,
+): void {
+  context.options.onError(createCompilerError(code))
 }
 
 function isEnd(
@@ -168,7 +184,7 @@ function parseElement(
   if (context.source.startsWith(`</${element.tag}`))
     parseTag(context, TagType.END)
   else
-    console.error(`${element.tag} tag has lack of closing tag`)
+    emitError(context, ErrorCodes.X_MISSING_END_TAG)
 
   return element
 }
@@ -187,7 +203,6 @@ function parseTag(
 ): ElementNode | undefined {
   const { advanceBy, advanceSpace } = context
   const match = /^<\/?([a-z][^\t\r\n\f />]*)/i.exec(context.source)!
-  console.log({ tagMatch: match })
   const tag = match[1]
 
   advanceBy(match[0].length)
@@ -260,7 +275,7 @@ function parseCDATA(
   advanceBy(open.length)
   const nodes = parseChildren(context, TextModes.CDATA, ancestors)
   if (context.source.length === 0)
-    console.error('missing CDATA end tag `]]>`')
+    emitError(context, ErrorCodes.EOF_IN_CDATA)
   else
     advanceBy(end.length)
 
@@ -275,9 +290,15 @@ function parseComment(context: ParserContext): CommentNode {
   if (!match) {
     content = context.source.slice(4)
     advanceBy(context.source.length)
-    console.error('eof in comment')
+    emitError(context, ErrorCodes.EOF_IN_COMMENT)
   }
   else {
+    if (match.index <= 3)
+      emitError(context, ErrorCodes.ABRUPT_CLOSING_OF_EMPTY_COMMENT)
+
+    if (match[1])
+      emitError(context, ErrorCodes.INCORRECTLY_CLOSED_COMMENT)
+
     content = context.source.slice(4, match.index)
 
     // Advancing with reporting nested comments.
@@ -287,7 +308,7 @@ function parseComment(context: ParserContext): CommentNode {
     while ((nestedIndex = s.indexOf('<!--', prevIndex)) !== -1) {
       advanceBy(nestedIndex - prevIndex + 1)
       if (nestedIndex + 4 < s.length)
-        console.error('nested comment')
+        emitError(context, ErrorCodes.NESTED_COMMENT)
 
       prevIndex = nestedIndex + 1
     }
@@ -308,7 +329,7 @@ function parseInterpolation(
   const [open, close] = ['{{', '}}']
   const closeIndex = context.source.indexOf(close, open.length)
   if (closeIndex === -1) {
-    console.error('missing interpolation end tag `}}`')
+    emitError(context, ErrorCodes.X_MISSING_INTERPOLATION_END)
     return
   }
 
