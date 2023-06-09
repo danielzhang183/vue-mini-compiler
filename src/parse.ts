@@ -268,7 +268,36 @@ function parseCDATA(
 }
 
 function parseComment(context: ParserContext): CommentNode {
+  const { advanceBy } = context
 
+  let content: string
+  const match = /--(\!)?>/.exec(context.source)
+  if (!match) {
+    content = context.source.slice(4)
+    advanceBy(context.source.length)
+    console.error('eof in comment')
+  }
+  else {
+    content = context.source.slice(4, match.index)
+
+    // Advancing with reporting nested comments.
+    const s = context.source.slice(0, match.index)
+    let prevIndex = 1
+    let nestedIndex = 0
+    while ((nestedIndex = s.indexOf('<!--', prevIndex)) !== -1) {
+      advanceBy(nestedIndex - prevIndex + 1)
+      if (nestedIndex + 4 < s.length)
+        console.error('nested comment')
+
+      prevIndex = nestedIndex + 1
+    }
+    advanceBy(match.index + match[0].length - prevIndex + 1)
+  }
+
+  return {
+    type: NodeTypes.COMMENT,
+    content,
+  }
 }
 
 function parseInterpolation(

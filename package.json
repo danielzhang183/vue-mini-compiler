@@ -59,7 +59,8 @@
   "eslintConfig": {
     "extends": "@antfu",
     "rules": {
-      "no-console": "off"
+      "no-console": "off",
+      "no-cond-assign": "off"
     }
   }
 }

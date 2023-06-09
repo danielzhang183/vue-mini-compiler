@@ -336,3 +336,54 @@ describe('parse CDATA', () => {
     `)
   })
 })
+
+describe('parse Comment', () => {
+  it('basic', () => {
+    expect(parse('<!--abc-->')).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "content": "abc",
+            "type": 4,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+
+  it('support multiple comments', () => {
+    expect(parse('<!--abc--><!--cde-->')).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "content": "abc",
+            "type": 4,
+          },
+          {
+            "content": "cde",
+            "type": 4,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+
+  it('support nested comments', () => {
+    expect(parse('<!--!--abc-->')).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "content": "!--abc",
+            "type": 4,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+})
