@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { tokenize } from '../src'
+import { tokenize } from '../src/tokenize'
 
 describe('tokenize', () => {
   it('basic', () => {
