@@ -1,3 +1,4 @@
+import createDebug from 'debug'
 import type { AttributeNode, CommentNode, DirectiveNode, ElementNode, InterpolationNode, TemplateChildNode, TextNode } from './ast'
 import { NodeTypes, createRoot } from './ast'
 import { ErrorCodes, createCompilerError, defaultOnError, defaultOnWarn } from './errors'
@@ -21,6 +22,19 @@ export interface ParserContext {
   source: string
   advanceBy(num: number): void
   advanceSpace(): void
+}
+
+const debug = {
+  context: createDebug('parser:context'),
+  total: createDebug('parser:total'),
+  children: createDebug('parser:children'),
+  tag: createDebug('parser:tag'),
+  element: createDebug('parser:element'),
+  text: createDebug('parser:text'),
+  comment: createDebug('parser:comment'),
+  interpolation: createDebug('parser:interpolation'),
+  attribute: createDebug('parser:attribute'),
+  CDATA: createDebug('parser:CDATA'),
 }
 
 export const defaultParserOptions = {
@@ -50,7 +64,7 @@ export function createParserContext(
     source: content,
     advanceBy(numberOfCharacters: number) {
       context.source = context.source.slice(numberOfCharacters)
-      console.log({ source: context.source })
+      debug.context(`source ${context.source}`)
     },
     advanceSpace() {
       const match = /^[\t\r\n\f ]+/.exec(context.source)
@@ -66,6 +80,7 @@ export function parse(
   content: string,
   options: ParserOptions = {},
 ) {
+  debug.total(`--------------\n start: ${content}`)
   const context = createParserContext(content, options)
   const nodes = parseChildren(context, TextModes.DATA, [])
   return createRoot(nodes)
@@ -76,7 +91,7 @@ export function parseChildren(
   mode: TextModes,
   ancestors: ElementNode[],
 ) {
-  console.log('----- parseChildren ----')
+  debug.children(`start: ${context.source}, mode: ${mode}`)
   const nodes: TemplateChildNode[] = []
 
   while (!isEnd(context, mode, ancestors)) {
@@ -170,7 +185,7 @@ function parseElement(
   context: ParserContext,
   ancestors: ElementNode[],
 ) {
-  console.log('---- parseElement ----')
+  debug.element(`start: ${context.source}`)
   const parent = last(ancestors)
   const element = parseTag(context, TagType.START)
   if (element.isSelfClosing)
@@ -201,6 +216,7 @@ function parseTag(
   context: ParserContext,
   type: TagType,
 ): ElementNode | undefined {
+  debug.tag(`start: ${context.source}, type: ${type}`)
   const { advanceBy, advanceSpace } = context
   const match = /^<\/?([a-z][^\t\r\n\f />]*)/i.exec(context.source)!
   const tag = match[1]
@@ -226,7 +242,7 @@ function parseTag(
 }
 
 function parseText(context: ParserContext, mode: TextModes): TextNode {
-  console.log('---- parseText ----')
+  debug.text(`start: ${context.source}, mode: ${mode}`)
   const endTokens = mode === TextModes.CDATA
     ? [']]>']
     : ['<', '{{']
@@ -270,6 +286,7 @@ function parseCDATA(
   context: ParserContext,
   ancestors: ElementNode[],
 ): TemplateChildNode[] {
+  debug.CDATA(`start: ${context.source}`)
   const { advanceBy } = context
   const [open, end] = ['<![CDATA[', ']]>']
   advanceBy(open.length)
@@ -283,6 +300,7 @@ function parseCDATA(
 }
 
 function parseComment(context: ParserContext): CommentNode {
+  debug.comment(`start: ${context.source}`)
   const { advanceBy } = context
 
   let content: string
@@ -325,6 +343,7 @@ function parseInterpolation(
   context: ParserContext,
   mode: TextModes,
 ): InterpolationNode | undefined {
+  debug.interpolation(`start: ${context.source}, mode: ${mode}`)
   const { advanceBy } = context
   const [open, close] = ['{{', '}}']
   const closeIndex = context.source.indexOf(close, open.length)
@@ -372,6 +391,7 @@ function parseAttributes(context: ParserContext): Array<AttributeNode | Directiv
 }
 
 function parseAttribute(context: ParserContext): AttributeNode {
+  debug.attribute(`start: ${context.source}`)
   const { advanceBy, advanceSpace } = context
 
   // <div id='foo'>
