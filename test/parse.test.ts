@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parse } from '../src'
 
-describe('parse', () => {
+describe('parse tags', () => {
   it.skip('basic', () => {
     const template = '<div><p>Vue</p><p>Template</p></div>'
     expect(parse(template)).toMatchInlineSnapshot(`
@@ -166,8 +166,10 @@ describe('parse', () => {
       }
     `)
   })
+})
 
-  it('support parse attribute', () => {
+describe('parse attribute', () => {
+  it('basic', () => {
     const template1 = '<div id="foo"></div>'
     const template2 = '<div id=\'foo\'></div>'
     const template3 = '<div id=foo></div>'
@@ -202,5 +204,107 @@ describe('parse', () => {
     expect(parse(template2)).toEqual(result)
     expect(parse(template3)).toEqual(result)
     expect(parse(template4)).toEqual(result)
+  })
+
+  it('support multiple attributes', () => {
+    const template5 = '<div id="foo" class="a"></div>'
+    expect(parse(template5)).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [
+              {
+                "name": "id",
+                "type": 7,
+                "value": {
+                  "content": "foo",
+                  "jsNode": undefined,
+                  "type": 2,
+                },
+              },
+              {
+                "name": "class",
+                "type": 7,
+                "value": {
+                  "content": "a",
+                  "jsNode": undefined,
+                  "type": 2,
+                },
+              },
+            ],
+            "tag": "div",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+})
+
+describe('parse interpolation', () => {
+  it('basic', () => {
+    const template1 = '<div>{{ abc }}</div>'
+    expect(parse(template1)).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "content": {
+                  "content": "abc",
+                  "type": 5,
+                },
+                "type": 6,
+              },
+            ],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [],
+            "tag": "div",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+
+  it('support text & interpolation mixed mode', () => {
+    const template1 = '<div>foo {{ bar }}</div>'
+    expect(parse(template1)).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "content": "foo ",
+                "jsNode": undefined,
+                "type": 2,
+              },
+              {
+                "content": {
+                  "content": "bar",
+                  "type": 5,
+                },
+                "type": 6,
+              },
+            ],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [],
+            "tag": "div",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
   })
 })

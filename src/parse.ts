@@ -104,7 +104,7 @@ export function parseChildren(
         }
       }
       else if (source.startsWith('{{')) {
-        node = parseInterpolation(context)
+        node = parseInterpolation(context, mode)
       }
     }
 
@@ -244,8 +244,33 @@ function parseComment(context: ParserContext): CommentNode {
 
 }
 
-function parseInterpolation(context: ParserContext): InterpolationNode {
+function parseInterpolation(
+  context: ParserContext,
+  mode: TextModes,
+): InterpolationNode | undefined {
+  const { advanceBy } = context
+  const [open, close] = ['{{', '}}']
+  const closeIndex = context.source.indexOf(close, open.length)
+  if (closeIndex === -1) {
+    console.error('missing interpolation end tag `}}`')
+    return
+  }
 
+  // consume `{{`
+  advanceBy(open.length)
+  const length = closeIndex - open.length
+  const preTrimContent = parseTextData(context, length, mode)
+  const content = preTrimContent.trim()
+  // consume `}}`
+  advanceBy(close.length)
+
+  return {
+    type: NodeTypes.INTERPOLATION,
+    content: {
+      type: NodeTypes.SIMPLE_EXPRESSION,
+      content,
+    },
+  }
 }
 
 type AttributeValue =
