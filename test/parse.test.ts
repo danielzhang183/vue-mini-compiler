@@ -308,3 +308,31 @@ describe('parse interpolation', () => {
     `)
   })
 })
+
+describe('parse CDATA', () => {
+  it('basic', () => {
+    const template1 = '<div><![CDATA[some text]]></div>'
+    expect(parse(template1)).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "content": "some text",
+                "jsNode": undefined,
+                "type": 2,
+              },
+            ],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [],
+            "tag": "div",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+})

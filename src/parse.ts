@@ -84,26 +84,26 @@ export function parseChildren(
   console.log('----- parseChildren ----')
   const nodes: TemplateChildNode[] = []
 
-  while (!isEnd(context, ancestors)) {
-    const { source } = context
-    let node: TemplateChildNode | undefined
+  while (!isEnd(context, mode, ancestors)) {
+    const { source: s } = context
+    let node: TemplateChildNode | TemplateChildNode[] | undefined
     if (mode === TextModes.DATA || mode === TextModes.RCDATA) {
-      if (mode === TextModes.DATA && source[0] === '<') {
-        if (source[1] === '!') {
-          if (source.startsWith('<!--'))
+      if (mode === TextModes.DATA && s[0] === '<') {
+        if (s[1] === '!') {
+          if (s.startsWith('<!--'))
             node = parseComment(context)
-          else if (source.startsWith('<![CDATA['))
+          else if (s.startsWith('<![CDATA['))
             node = parseCDATA(context, ancestors)
         }
-        else if (source[1] === '/') {
+        else if (s[1] === '/') {
           console.error('Invalid Eng Tag')
           continue
         }
-        else if (/[a-z]/i.test(source[1])) {
+        else if (/[a-z]/i.test(s[1])) {
           node = parseElement(context, ancestors)
         }
       }
-      else if (source.startsWith('{{')) {
+      else if (s.startsWith('{{')) {
         node = parseInterpolation(context, mode)
       }
     }
@@ -111,7 +111,10 @@ export function parseChildren(
     if (!node)
       node = parseText(context, mode)
 
-    nodes.push(node)
+    if (Array.isArray(node))
+      nodes.push(...node)
+    else
+      nodes.push(node)
   }
 
   return nodes
@@ -119,17 +122,32 @@ export function parseChildren(
 
 function isEnd(
   context: ParserContext,
+  mode: TextModes,
   ancestors: ElementNode[],
 ): boolean {
-  if (!context.source)
-    return true
+  const s = context.source
 
-  for (let i = ancestors.length - 1; i >= 0; i--) {
-    if (context.source.startsWith(`</${ancestors[i].tag}`))
-      return true
+  switch (mode) {
+    case TextModes.DATA:
+      for (let i = ancestors.length - 1; i >= 0; i--) {
+        if (s.startsWith(`</${ancestors[i].tag}`))
+          return true
+      }
+      break
+    case TextModes.RCDATA:
+    case TextModes.RAWTEXT: {
+      const parent = last(ancestors)
+      if (parent && s.startsWith(`</${parent.tag}`))
+        return true
+      break
+    }
+    case TextModes.CDATA:
+      if (s.startsWith(']]>'))
+        return true
+      break
   }
 
-  return false
+  return !s
 }
 
 function parseElement(
@@ -236,8 +254,17 @@ function parseTextData(
 function parseCDATA(
   context: ParserContext,
   ancestors: ElementNode[],
-): TemplateChildNode {
+): TemplateChildNode[] {
+  const { advanceBy } = context
+  const [open, end] = ['<![CDATA[', ']]>']
+  advanceBy(open.length)
+  const nodes = parseChildren(context, TextModes.CDATA, ancestors)
+  if (context.source.length === 0)
+    console.error('missing CDATA end tag `]]>`')
+  else
+    advanceBy(end.length)
 
+  return nodes
 }
 
 function parseComment(context: ParserContext): CommentNode {
