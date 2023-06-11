@@ -81,11 +81,20 @@ export interface DirectiveNode extends Node {
   modifiers: string[]
 }
 
+export const enum ConstantTypes {
+  NOT_CONSTANT,
+  CAN_SKIP_PATCH,
+  CAN_HOIST,
+  CAN_STRINGIFY,
+}
+
 export type ExpressionNode = SimpleExpressionNode | CompoundExpressionNode
 
 export interface SimpleExpressionNode extends Node {
   type: NodeTypes.SIMPLE_EXPRESSION
   content: string
+  isStatic: boolean
+  constType: ConstantTypes
 }
 
 export interface InterpolationNode extends Node {

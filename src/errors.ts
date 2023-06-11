@@ -45,6 +45,7 @@ export const enum ErrorCodes {
   INCORRECTLY_CLOSED_COMMENT,
   INCORRECTLY_OPENED_COMMENT,
   INVALID_FIRST_CHARACTER_OF_TAG_NAME,
+  MISSING_ATTRIBUTE_VALUE,
   MISSING_END_TAG_NAME,
   NESTED_COMMENT,
 
@@ -52,6 +53,8 @@ export const enum ErrorCodes {
   X_INVALID_END_TAG,
   X_MISSING_END_TAG,
   X_MISSING_INTERPOLATION_END,
+  X_MISSING_DIRECTIVE_NAME,
+  X_MISSING_DYNAMIC_DIRECTIVE_ARGUMENT_END,
 }
 
 export const errorMessages: Record<ErrorCodes, string> = {
@@ -69,6 +72,7 @@ export const errorMessages: Record<ErrorCodes, string> = {
   [ErrorCodes.INCORRECTLY_CLOSED_COMMENT]: 'Incorrectly closed comment.',
   [ErrorCodes.INCORRECTLY_OPENED_COMMENT]: 'Incorrectly opened comment.',
   [ErrorCodes.INVALID_FIRST_CHARACTER_OF_TAG_NAME]: 'Illegal tag name. Use \'&lt;\' to print \'<\'.',
+  [ErrorCodes.MISSING_ATTRIBUTE_VALUE]: 'Attribute value was expected.',
   [ErrorCodes.MISSING_END_TAG_NAME]: 'End tag name was expected.',
   [ErrorCodes.NESTED_COMMENT]: 'Unexpected \'<!--\' in comment.',
 
@@ -76,4 +80,8 @@ export const errorMessages: Record<ErrorCodes, string> = {
   [ErrorCodes.X_INVALID_END_TAG]: 'Invalid end tag.',
   [ErrorCodes.X_MISSING_END_TAG]: 'Element is missing end tag.',
   [ErrorCodes.X_MISSING_INTERPOLATION_END]: 'Interpolation end sign was not found.',
+  [ErrorCodes.X_MISSING_DYNAMIC_DIRECTIVE_ARGUMENT_END]:
+    'End bracket for dynamic directive argument was not found. '
+    + 'Note that dynamic directive argument cannot contain spaces.',
+  [ErrorCodes.X_MISSING_DIRECTIVE_NAME]: 'Legal directive name was expected.',
 }

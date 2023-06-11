@@ -1,6 +1,6 @@
 import createDebug from 'debug'
-import type { AttributeNode, CommentNode, DirectiveNode, ElementNode, InterpolationNode, TemplateChildNode, TextNode } from './ast'
-import { NodeTypes, createRoot } from './ast'
+import type { AttributeNode, CommentNode, DirectiveNode, ElementNode, ExpressionNode, InterpolationNode, TemplateChildNode, TextNode } from './ast'
+import { ConstantTypes, NodeTypes, createRoot } from './ast'
 import { ErrorCodes, createCompilerError, defaultOnError, defaultOnWarn } from './errors'
 import type { MergedParserOptions, ParserOptions } from './options'
 
@@ -21,7 +21,7 @@ export interface ParserContext {
   options: MergedParserOptions
   source: string
   advanceBy(num: number): void
-  advanceSpace(): void
+  advanceSpaces(): void
 }
 
 const debug = {
@@ -66,7 +66,7 @@ export function createParserContext(
       context.source = context.source.slice(numberOfCharacters)
       debug.context(`source ${context.source}`)
     },
-    advanceSpace() {
+    advanceSpaces() {
       const match = /^[\t\r\n\f ]+/.exec(context.source)
       if (match)
         context.advanceBy(match[0].length)
@@ -217,12 +217,12 @@ function parseTag(
   type: TagType,
 ): ElementNode | undefined {
   debug.tag(`start: ${context.source}, type: ${type}`)
-  const { advanceBy, advanceSpace } = context
+  const { advanceBy, advanceSpaces } = context
   const match = /^<\/?([a-z][^\t\r\n\f />]*)/i.exec(context.source)!
   const tag = match[1]
 
   advanceBy(match[0].length)
-  advanceSpace()
+  advanceSpaces()
   const props = parseAttributes(context)
 
   const isSelfClosing = context.source.startsWith('/>')
@@ -364,6 +364,8 @@ function parseInterpolation(
     type: NodeTypes.INTERPOLATION,
     content: {
       type: NodeTypes.SIMPLE_EXPRESSION,
+      isStatic: false,
+      constType: ConstantTypes.NOT_CONSTANT,
       content,
     },
   }
@@ -377,22 +379,26 @@ type AttributeValue =
   | undefined
 
 function parseAttributes(context: ParserContext): Array<AttributeNode | DirectiveNode> {
-  const props: AttributeNode[] = []
+  const { advanceSpaces } = context
+  const props: Array<AttributeNode | DirectiveNode> = []
 
   while (
-    !context.source.startsWith('>')
+    context.source.length > 0
+    && !context.source.startsWith('>')
     && !context.source.startsWith('/>')
   ) {
+    console.log({ source: context.source })
     const attr = parseAttribute(context)
     props.push(attr)
+    advanceSpaces()
   }
 
   return props
 }
 
-function parseAttribute(context: ParserContext): AttributeNode {
+function parseAttribute(context: ParserContext): AttributeNode | DirectiveNode {
   debug.attribute(`start: ${context.source}`)
-  const { advanceBy, advanceSpace } = context
+  const { advanceBy, advanceSpaces } = context
 
   // <div id='foo'>
   // <div id="foo">
@@ -400,20 +406,87 @@ function parseAttribute(context: ParserContext): AttributeNode {
   // <div id= foo >
   // Name
   const match = /^[^\t\r\n\f />][^\t\r\n\f />=]*/.exec(context.source)!
+  console.log({ match })
   const name = match[0]
+  console.log({ name })
   advanceBy(name.length)
 
   // Value
   let value: AttributeValue | undefined
   if (/^[\t\r\n\f ]*=/.test(context.source)) {
-    advanceSpace()
+    advanceSpaces()
     // consume '='
     advanceBy(1)
-    advanceSpace()
+    advanceSpaces()
     value = parseAttributeValue(context)
+    console.log({ value })
+    if (!value)
+      emitError(context, ErrorCodes.MISSING_ATTRIBUTE_VALUE)
   }
 
-  advanceSpace()
+  if (/^(v-[A-Za-z0-9-]|:|\.|@|#).test(name)/) {
+    const match = /(?:^v-([a-z0-9-]+))?(?:(?::|^\.|^@|^#)(\[[^\]]+\]|[^\.]+))?(.+)?$/i.exec(
+      name,
+    )!
+    const isPropShorthand = name.startsWith('.')
+    const directiveName = match[1] || (isPropShorthand || name.startsWith(':'))
+      ? 'bind'
+      : name.startsWith('@')
+        ? 'on'
+        : 'slot'
+
+    let arg: ExpressionNode | undefined
+    if (match[2]) {
+      const isSlot = directiveName === 'slot'
+      let content = match[2]
+      let isStatic = true
+      if (content.startsWith('[')) {
+        isStatic = false
+
+        if (!content.endsWith(']')) {
+          emitError(
+            context,
+            ErrorCodes.X_MISSING_DYNAMIC_DIRECTIVE_ARGUMENT_END,
+          )
+          content = content.slice(1)
+        }
+        else {
+          content = content.slice(1, content.length - 1)
+        }
+      }
+      else if (isSlot) {
+        content += match[3] || ''
+      }
+
+      arg = {
+        type: NodeTypes.SIMPLE_EXPRESSION,
+        content,
+        isStatic,
+        constType: isStatic
+          ? ConstantTypes.CAN_STRINGIFY
+          : ConstantTypes.NOT_CONSTANT,
+      }
+      const modifiers = match[3] ? match[3].slice(1).split('.') : []
+      if (isPropShorthand)
+        modifiers.push('prop')
+
+      return {
+        type: NodeTypes.DIRECTIVE,
+        name: directiveName,
+        exp: value && {
+          type: NodeTypes.SIMPLE_EXPRESSION,
+          content: value.content,
+          isStatic: false,
+          // Treat as non-constant by default. This can be potentially set to
+          // other values by `transformExpression` to make it eligible for hoisting.
+          constType: ConstantTypes.NOT_CONSTANT,
+        },
+        arg,
+        modifiers,
+      }
+    }
+  }
+
   return {
     type: NodeTypes.ATTRIBUTE,
     name,

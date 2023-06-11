@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { parse } from '../src'
 
 describe('parse tags', () => {
-  it.skip('basic', () => {
+  it('basic', () => {
     const template = '<div><p>Vue</p><p>Template</p></div>'
     expect(parse(template)).toMatchInlineSnapshot(`
       {
@@ -256,7 +256,9 @@ describe('parse interpolation', () => {
             "children": [
               {
                 "content": {
+                  "constType": 0,
                   "content": "abc",
+                  "isStatic": false,
                   "type": 5,
                 },
                 "type": 6,
@@ -289,7 +291,9 @@ describe('parse interpolation', () => {
               },
               {
                 "content": {
+                  "constType": 0,
                   "content": "bar",
+                  "isStatic": false,
                   "type": 5,
                 },
                 "type": 6,
@@ -379,6 +383,172 @@ describe('parse Comment', () => {
           {
             "content": "!--abc",
             "type": 4,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+})
+
+describe.only('parse directive', () => {
+  it('directive with value', () => {
+    expect(parse('<template v-if="ok"></template>')).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [
+              {
+                "name": "v-if",
+                "type": 7,
+                "value": {
+                  "content": "ok",
+                  "jsNode": undefined,
+                  "type": 2,
+                },
+              },
+            ],
+            "tag": "template",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+
+  it('v-on shorthand', () => {
+    expect(parse('<template @click="handler"></template>')).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [
+              {
+                "arg": {
+                  "constType": 3,
+                  "content": "click",
+                  "isStatic": true,
+                  "type": 5,
+                },
+                "exp": {
+                  "constType": 0,
+                  "content": "handler",
+                  "isStatic": false,
+                  "type": 5,
+                },
+                "modifiers": [],
+                "name": "on",
+                "type": 8,
+              },
+            ],
+            "tag": "template",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+
+  it('v-bind .prop shorthand', () => {
+    expect(parse('<div .a=b />')).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "isSelfClosing": true,
+            "jsNode": undefined,
+            "props": [
+              {
+                "arg": {
+                  "constType": 3,
+                  "content": "a",
+                  "isStatic": true,
+                  "type": 5,
+                },
+                "exp": {
+                  "constType": 0,
+                  "content": "b",
+                  "isStatic": false,
+                  "type": 5,
+                },
+                "modifiers": [
+                  "prop",
+                ],
+                "name": "bind",
+                "type": 8,
+              },
+            ],
+            "tag": "div",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+
+  it('v-bind shorthand with modifier', () => {
+    expect(parse('<div :a.sync=b />')).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "isSelfClosing": true,
+            "jsNode": undefined,
+            "props": [
+              {
+                "arg": {
+                  "constType": 3,
+                  "content": "a",
+                  "isStatic": true,
+                  "type": 5,
+                },
+                "exp": {
+                  "constType": 0,
+                  "content": "b",
+                  "isStatic": false,
+                  "type": 5,
+                },
+                "modifiers": [
+                  "sync",
+                ],
+                "name": "bind",
+                "type": 8,
+              },
+            ],
+            "tag": "div",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+
+  it('slot element', () => {
+    const ast = parse('<slot></slot>')
+    expect(ast).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [],
+            "tag": "slot",
+            "type": 1,
           },
         ],
         "jsNode": undefined,
