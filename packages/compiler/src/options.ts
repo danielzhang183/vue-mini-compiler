@@ -12,6 +12,15 @@ export interface ParserOptions extends ErrorHandlingOptions {
     node: ElementNode,
     parent: ElementNode | undefined
   ) => TextModes
+  /**
+   * Whitespace handling strategy
+   */
+  whitespace?: 'preserve' | 'condense'
+  /**
+   * Whether to keep comments in the templates AST.
+   * This defaults to `true` in development and `false` in production builds.
+   */
+  comments?: boolean
 }
 
 export type MergedParserOptions = Required<ParserOptions>

@@ -37,7 +37,7 @@ const debug = {
   CDATA: createDebug('parser:CDATA'),
 }
 
-export const defaultParserOptions = {
+export const defaultParserOptions: ParserOptions = {
   getTextMode: ({ tag }: ElementNode) => {
     if (tag === 'textarea' || tag === 'title')
       return TextModes.RCDATA
@@ -48,6 +48,8 @@ export const defaultParserOptions = {
   },
   onWarn: defaultOnWarn,
   onError: defaultOnError,
+  whitespace: 'preserve',
+  comments: true,
 }
 
 export function createParserContext(
@@ -141,7 +143,56 @@ export function parseChildren(
       nodes.push(node)
   }
 
-  return nodes
+  let removedWhitespace = false
+  if (mode !== TextModes.RAWTEXT && mode !== TextModes.RCDATA) {
+    const shouldCondense = context.options.whitespace !== 'preserve'
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i]
+      if (node.type === NodeTypes.TEXT) {
+        if (!/[^\t\r\n\f ]/.test(node.content)) {
+          const prev = nodes[i - 1]
+          const next = nodes[i + 1]
+          // Remove if:
+          // - the whitespace is the first or last node, or:
+          // - (condense mode) the whitespace is between twos comments, or:
+          // - (condense mode) the whitespace is between comment and element, or:
+          // - (condense mode) the whitespace is between two elements AND contains newline
+          if (
+            !prev
+            || !next
+            || (shouldCondense
+              && ((prev.type === NodeTypes.COMMENT
+                && next.type === NodeTypes.COMMENT)
+                || (prev.type === NodeTypes.COMMENT
+                  && next.type === NodeTypes.ELEMENT)
+                || (prev.type === NodeTypes.ELEMENT
+                  && next.type === NodeTypes.COMMENT)
+                || (prev.type === NodeTypes.ELEMENT
+                  && next.type === NodeTypes.ELEMENT
+                  && /[\r\n]/.test(node.content))))
+          ) {
+            removedWhitespace = true
+            nodes[i] = null as any
+          }
+          else {
+            // Otherwise, the whitespace is condensed into a single space
+            node.content = ' '
+          }
+        }
+        else if (shouldCondense) {
+          // in condense mode, consecutive whitespaces in text are condensed
+          // down to a single space.
+          node.content = node.content.replace(/[\t\r\n\f ]+/g, ' ')
+        }
+      }
+      else if (node.type === NodeTypes.COMMENT && !context.options.comments) {
+        removedWhitespace = true
+        nodes[i] = null as any
+      }
+    }
+  }
+
+  return removedWhitespace ? nodes.filter(Boolean) : nodes
 }
 
 function emitError(
@@ -232,7 +283,7 @@ function parseTag(
     return
 
   return {
-    type: NodeTypes.ElEMENT,
+    type: NodeTypes.ELEMENT,
     tag,
     props,
     children: [],

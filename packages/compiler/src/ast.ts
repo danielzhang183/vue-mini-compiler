@@ -1,6 +1,6 @@
 export enum NodeTypes {
   ROOT,
-  ElEMENT,
+  ELEMENT,
   TEXT,
   IDENTIFIER,
   COMMENT,
@@ -48,7 +48,7 @@ export type ElementNode =
  | BaseElementNode
 
 export interface BaseElementNode extends Node {
-  type: NodeTypes.ElEMENT
+  type: NodeTypes.ELEMENT
   tag: string
   isSelfClosing: boolean
   children: TemplateChildNode[]

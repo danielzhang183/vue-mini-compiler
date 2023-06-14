@@ -3,7 +3,7 @@ import type { NodeTransform } from '../transform'
 
 export const transformElement: NodeTransform = (node) => {
   return () => {
-    if (node.type !== NodeTypes.ElEMENT)
+    if (node.type !== NodeTypes.ELEMENT)
       return
 
     const callExpression = createCallExpression<string>('h', [createObjectProperty(node.tag)])

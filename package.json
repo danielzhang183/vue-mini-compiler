@@ -61,7 +61,8 @@
     "extends": "@antfu",
     "rules": {
       "no-console": "off",
-      "no-cond-assign": "off"
+      "no-cond-assign": "off",
+      "no-constant-condition": "off"
     }
   }
 }

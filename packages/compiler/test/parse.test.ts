@@ -52,21 +52,12 @@ describe('parse tags', () => {
   })
 
   it('support multiple lines', () => {
-    const template = `<div>
-  <p>Vue</p>
-  <p>Template</p>
-</div>`
+    const template = '<div>\n  <p>Vue</p>\n  <p>Template</p>\n</div>'
     expect(parse(template)).toMatchInlineSnapshot(`
       {
         "children": [
           {
             "children": [
-              {
-                "content": "
-        ",
-                "jsNode": undefined,
-                "type": 2,
-              },
               {
                 "children": [
                   {
@@ -82,8 +73,7 @@ describe('parse tags', () => {
                 "type": 1,
               },
               {
-                "content": "
-        ",
+                "content": " ",
                 "jsNode": undefined,
                 "type": 2,
               },
@@ -100,12 +90,6 @@ describe('parse tags', () => {
                 "props": [],
                 "tag": "p",
                 "type": 1,
-              },
-              {
-                "content": "
-      ",
-                "jsNode": undefined,
-                "type": 2,
               },
             ],
             "isSelfClosing": false,
@@ -392,7 +376,7 @@ describe('parse Comment', () => {
   })
 })
 
-describe.only('parse directive', () => {
+describe('parse directive', () => {
   it('directive with value', () => {
     expect(parse('<template v-if="ok"></template>')).toMatchInlineSnapshot(`
       {
@@ -548,6 +532,56 @@ describe.only('parse directive', () => {
             "jsNode": undefined,
             "props": [],
             "tag": "slot",
+            "type": 1,
+          },
+        ],
+        "jsNode": undefined,
+        "type": 0,
+      }
+    `)
+  })
+})
+
+describe('options', () => {
+  it('ignore whitespace', () => {
+    expect(parse('<div>\n  <p>Vue</p>\n  <p>Template</p>\n</div>', { whitespace: 'condense' })).toMatchInlineSnapshot(`
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "content": "Vue",
+                    "jsNode": undefined,
+                    "type": 2,
+                  },
+                ],
+                "isSelfClosing": false,
+                "jsNode": undefined,
+                "props": [],
+                "tag": "p",
+                "type": 1,
+              },
+              {
+                "children": [
+                  {
+                    "content": "Template",
+                    "jsNode": undefined,
+                    "type": 2,
+                  },
+                ],
+                "isSelfClosing": false,
+                "jsNode": undefined,
+                "props": [],
+                "tag": "p",
+                "type": 1,
+              },
+            ],
+            "isSelfClosing": false,
+            "jsNode": undefined,
+            "props": [],
+            "tag": "div",
             "type": 1,
           },
         ],

@@ -72,7 +72,7 @@ function traverseNode(node: RootNode | TemplateChildNode, context: TransformCont
 
   switch (node.type) {
     case NodeTypes.ROOT:
-    case NodeTypes.ElEMENT:
+    case NodeTypes.ELEMENT:
       traverseChildren(node, context)
   }
 
