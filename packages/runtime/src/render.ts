@@ -38,7 +38,7 @@ export function createRenderer(options: RendererOptions) {
   }
 
   function mountElement(vnode: VNode, container: Container) {
-    const el = createElement(vnode.type)
+    const el = createElement(vnode.type as string)
     if (isString(vnode.children))
       setElementText(el, vnode.children)
     insert(el, container)
