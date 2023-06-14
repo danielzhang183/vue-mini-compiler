@@ -1,5 +1,5 @@
 {
-  "name": "vue-mini-compiler",
+  "name": "dz-vue-mini",
   "type": "module",
   "version": "0.0.0",
   "packageManager": "pnpm@8.6.1",
@@ -33,14 +33,13 @@
     "dist"
   ],
   "scripts": {
-    "build": "unbuild",
+    "build": "pnpm -r run build",
     "dev": "unbuild --stub",
     "lint": "eslint .",
     "prepublishOnly": "npm run build",
-    "release": "bumpp && npm publish",
-    "start": "esno src/index.ts",
+    "release": "bumpp --commit --push --tag && pnpm publish",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "pnpm -r run typecheck"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.27.0",

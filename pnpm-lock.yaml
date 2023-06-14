@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -49,6 +49,15 @@ importers:
       vitest:
         specifier: ^0.23.4
         version: 0.23.4
+
+  packages/compiler:
+    devDependencies:
+      '@types/debug':
+        specifier: ^4.1.8
+        version: registry.npmmirror.com/@types/debug@4.1.8
+      debug:
+        specifier: ^4.3.4
+        version: registry.npmmirror.com/debug@4.3.4
 
 packages:
   /@ampproject/remapping@2.2.0:
