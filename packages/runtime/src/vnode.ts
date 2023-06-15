@@ -58,6 +58,47 @@ export interface VNode<
   dynamicChildren: VNode[] | null
 }
 
+const blockStack: (VNode[] | null)[] = []
+let currentBlock: VNode[] | null = null
+
+export function openBlock() {
+  blockStack.push((currentBlock = []))
+}
+
+export function closeBlock() {
+  blockStack.pop()
+  currentBlock = blockStack[blockStack.length - 1] || null
+}
+
+export function createBlock(
+  type: VNodeTypes,
+  props?: Record<string, any> | null,
+  children?: any,
+  patchFlag?: number,
+  dynamicProps?: string[],
+) {
+  return setupBlock(
+    createVNode(
+      type,
+      // @ts-expect-error okay
+      props,
+      children,
+      patchFlag,
+      dynamicProps,
+      true /* isBlock: prevent a block from tracking itself */,
+    ),
+  )
+}
+
+function setupBlock(vnode: VNode) {
+  vnode.dynamicChildren = currentBlock || null
+  closeBlock()
+  if (currentBlock)
+    currentBlock.push(vnode)
+
+  return vnode
+}
+
 export function isVNode(value: any): value is VNode {
   return value ? value.__v_isVNode === true : false
 }
@@ -68,7 +109,7 @@ export function createVNode(
   children: unknown = null,
   patchFlag = 0,
   dynamicProps: string[] | null = null,
-  // isBlockVNode = false,
+  isBlockVNode = false,
 ): VNode {
   const vnode = <VNode>{
     __v_isVNode: true,
@@ -78,6 +119,15 @@ export function createVNode(
     patchFlag,
     dynamicProps,
   }
+
+  // track vnode for block tree
+  if (
+    // avoid a block node from tracking itself
+    !isBlockVNode
+    && currentBlock
+    && vnode.patchFlag
+  )
+    currentBlock.push(vnode)
 
   return vnode
 }
